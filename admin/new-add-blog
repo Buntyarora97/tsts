@@ -1,0 +1,136 @@
+<?php
+include_once('header.php');
+include('connection.php');
+
+if (isset($_POST['btn4'])) {
+    $heading = mysqli_real_escape_string($dbcon, $_POST['heading']);
+    $description = mysqli_real_escape_string($dbcon, $_POST['description']);
+    $date = mysqli_real_escape_string($dbcon, $_POST['date']);
+    
+    $subheadings = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $subheadings[$i] = mysqli_real_escape_string($dbcon, $_POST['subheading_' . $i]);
+    }
+
+    $paragraphs = [];
+    for ($i = 1; $i <= 6; $i++) {
+        $paragraphs[$i] = mysqli_real_escape_string($dbcon, $_POST['paragraph_' . $i]);
+    }
+
+    $images = [];
+    $tmp_images = [];
+    $uploadDir = 'assets/images/upload/blogs/';
+    
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+    
+    for ($i = 1; $i <= 6; $i++) {
+        if (!empty($_FILES['image_' . $i]['name'])) {
+            $image_name = time() . '_' . basename($_FILES['image_' . $i]['name']);
+            $target_file = $uploadDir . $image_name;
+            
+            if (move_uploaded_file($_FILES['image_' . $i]['tmp_name'], $target_file)) {
+                $images[$i] = $image_name;
+            } else {
+                $images[$i] = '';
+            }
+        } else {
+            $images[$i] = '';
+        }
+    }
+
+    $query = "INSERT INTO newblog (heading, description, date, 
+                subheading1, subheading2, subheading3, subheading4, subheading5, 
+                paragraph1, paragraph2, paragraph3, paragraph4, paragraph5, paragraph6, 
+                image1, image2, image3, image4, image5, image6) 
+              VALUES ('$heading', '$description', '$date', 
+                      '{$subheadings[1]}', '{$subheadings[2]}', '{$subheadings[3]}', '{$subheadings[4]}', '{$subheadings[5]}', 
+                      '{$paragraphs[1]}', '{$paragraphs[2]}', '{$paragraphs[3]}', '{$paragraphs[4]}', '{$paragraphs[5]}', '{$paragraphs[6]}', 
+                      '{$images[1]}', '{$images[2]}', '{$images[3]}', '{$images[4]}', '{$images[5]}', '{$images[6]}')";
+
+    if (mysqli_query($dbcon, $query)) {
+        echo "<script>alert('New Blog Added Successfully');</script>";
+    } else {
+        echo "Error: " . mysqli_error($dbcon);
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add Blog</title>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/plugins/jquery-validation/js/jquery.validate.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Add New Blog</h2>
+        <form action="" method="POST" enctype="multipart/form-data">
+            <label>Heading</label>
+            <input type="text" name="heading" required>
+
+            <?php for ($i = 1; $i <= 5; $i++) { ?>
+                <label>Subheading <?php echo $i; ?></label>
+                <input type="text" name="subheading_<?php echo $i; ?>" <?php echo ($i <= 2) ? 'required' : ''; ?>>
+            <?php } ?>
+
+            <label>Description</label>
+            <textarea name="description" required></textarea>
+
+            <?php for ($i = 1; $i <= 6; $i++) { ?>
+                <label>Paragraph <?php echo $i; ?></label>
+                <textarea name="paragraph_<?php echo $i; ?>" <?php echo ($i <= 4) ? 'required' : ''; ?>></textarea>
+            <?php } ?>
+
+            <?php for ($i = 1; $i <= 6; $i++) { ?>
+                <label>Image <?php echo $i; ?></label>
+                <input type="file" name="image_<?php echo $i; ?>" <?php echo ($i <= 4) ? 'required' : ''; ?>>
+            <?php } ?>
+
+            <label>Date</label>
+            <input type="date" name="date" required>
+
+            <button type="submit" name="btn4">SAVE</button>
+        </form>
+    </div>
+</body>
+</html>
+
+<script>
+$(document).ready(function () {
+    $("form").validate({
+        rules: {
+            heading: "required",
+            description: "required",
+            date: "required",
+            subheading_1: "required",
+            subheading_2: "required",
+            paragraph_1: "required",
+            paragraph_2: "required",
+            paragraph_3: "required",
+            paragraph_4: "required",
+            image_1: "required",
+            image_2: "required",
+            image_3: "required",
+            image_4: "required"
+        },
+        messages: {
+            heading: "Please enter the heading",
+            description: "Please enter the description",
+            date: "Please select a date",
+            subheading_1: "Please enter the first subheading",
+            subheading_2: "Please enter the second subheading",
+            paragraph_1: "Please enter the first paragraph",
+            paragraph_2: "Please enter the second paragraph",
+            paragraph_3: "Please enter the third paragraph",
+            paragraph_4: "Please enter the fourth paragraph",
+            image_1: "Please upload the first image",
+            image_2: "Please upload the second image",
+            image_3: "Please upload the third image",
+            image_4: "Please upload the fourth image"
+        }
+    });
+});
+</script>
